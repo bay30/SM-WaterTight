@@ -1,0 +1,10 @@
+{
+    "f5926117-dd91-4909-8a3f-83ae595c1871": {
+        "title": "WaterSeal",
+        "description": "Calucate enclosed volumes on the body its placed on. Make sure to place this while the creation is on the lift! #FF0000 PLACING ON LARGE CREATIONS CAN FREEZE GAME FOR LONG DURATIONS!"
+    },
+    "851d6511-f64e-4647-b6d1-b0850a7702a0": {
+        "title": "Door",
+        "description": "Seals a volume while being walkthrough used for creating doors takes a single logic input to toggle seal."
+    }
+}

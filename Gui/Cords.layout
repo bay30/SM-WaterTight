@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<MyGUI type="Layout" version="3.2.0">
+    <Widget type="Widget" skin="BackgroundPromptNarrow" position_real="0 0 0.269792 0.480556" name="BackPanel">
+        <Property key="InheritsAlpha" value="false"/>
+        <Widget type="Widget" skin="PanelEmpty" position_real="0.110039 0.0597303 0.76834 0.807322">
+            <Property key="NeedKey" value="false"/>
+            <Property key="InheritsAlpha" value="false"/>
+            <Widget type="EditBox" skin="EditBox" position_real="0.0954774 0.295943 0.19598 0.0954654" name="X">
+                <Property key="Caption" value="#{X}"/>
+                <Property key="FontName" value="SM_Button"/>
+                <Property key="TextAlign" value="Center"/>
+            </Widget>
+            <Widget type="EditBox" skin="EditBox" position_real="0.396985 0.295943 0.19598 0.0954654" name="Y">
+                <Property key="Caption" value="#{Y}"/>
+                <Property key="FontName" value="SM_Button"/>
+                <Property key="TextAlign" value="Center"/>
+            </Widget>
+            <Widget type="EditBox" skin="EditBox" position_real="0.69598 0.295943 0.19598 0.0954654" name="Z">
+                <Property key="Caption" value="#{Z}"/>
+                <Property key="FontName" value="SM_Button"/>
+                <Property key="TextAlign" value="Center"/>
+            </Widget>
+            <Widget type="EditBox" skin="EditBox" position_real="0.0954774 0.596659 0.19598 0.0954654" name="XX">
+                <Property key="Caption" value="#{XX}"/>
+                <Property key="FontName" value="SM_Button"/>
+                <Property key="TextAlign" value="Center"/>
+            </Widget>
+            <Widget type="EditBox" skin="EditBox" position_real="0.396985 0.596659 0.19598 0.0954654" name="YY">
+                <Property key="Caption" value="#{YY}"/>
+                <Property key="FontName" value="SM_Button"/>
+                <Property key="TextAlign" value="Center"/>
+            </Widget>
+            <Widget type="EditBox" skin="EditBox" position_real="0.69598 0.596659 0.19598 0.0954654" name="ZZ">
+                <Property key="Caption" value="#{ZZ}"/>
+                <Property key="FontName" value="SM_Button"/>
+                <Property key="TextAlign" value="Center"/>
+            </Widget>
+            <Widget type="Button" skin="SecondaryButton" position_real="0.190955 0.393795 0.0954774 0.0954654" name="X1">
+                <Property key="Caption" value="&gt;"/>
+                <Property key="FontName" value="SM_Button"/>
+                <Property key="TextAlign" value="Center"/>
+            </Widget>
+            <Widget type="Button" skin="SecondaryButton" position_real="0.494975 0.393795 0.0954774 0.0954654" name="Y1">
+                <Property key="Caption" value="&gt;"/>
+                <Property key="FontName" value="SM_Button"/>
+                <Property key="TextAlign" value="Center"/>
+            </Widget>
+            <Widget type="Button" skin="SecondaryButton" position_real="0.79397 0.393795 0.0954774 0.0954654" name="Z1">
+                <Property key="Caption" value="&gt;"/>
+                <Property key="FontName" value="SM_Button"/>
+                <Property key="TextAlign" value="Center"/>
+            </Widget>
+            <Widget type="Button" skin="SecondaryButton" position_real="0.190955 0.694511 0.0954774 0.0954654" name="XX1">
+                <Property key="Caption" value="&gt;"/>
+                <Property key="FontName" value="SM_Button"/>
+                <Property key="TextAlign" value="Center"/>
+            </Widget>
+            <Widget type="Button" skin="SecondaryButton" position_real="0.494975 0.694511 0.0954774 0.0954654" name="YY1">
+                <Property key="Caption" value="&gt;"/>
+                <Property key="FontName" value="SM_Button"/>
+                <Property key="TextAlign" value="Center"/>
+            </Widget>
+            <Widget type="Button" skin="SecondaryButton" position_real="0.79397 0.694511 0.0954774 0.0954654" name="ZZ1">
+                <Property key="Caption" value="&gt;"/>
+                <Property key="FontName" value="SM_Button"/>
+                <Property key="TextAlign" value="Center"/>
+            </Widget>
+            <Widget type="Button" skin="SecondaryButton" position_real="0.0954774 0.393795 0.0954774 0.0954654" name="X0">
+                <Property key="Caption" value="&lt;"/>
+                <Property key="FontName" value="SM_Button"/>
+                <Property key="TextAlign" value="Center"/>
+            </Widget>
+            <Widget type="Button" skin="SecondaryButton" position_real="0.396985 0.393795 0.0954774 0.0954654" name="Y0">
+                <Property key="Caption" value="&lt;"/>
+                <Property key="FontName" value="SM_Button"/>
+                <Property key="TextAlign" value="Center"/>
+            </Widget>
+            <Widget type="Button" skin="SecondaryButton" position_real="0.69598 0.393795 0.0954774 0.0954654" name="Z0">
+                <Property key="Caption" value="&lt;"/>
+                <Property key="FontName" value="SM_Button"/>
+                <Property key="TextAlign" value="Center"/>
+            </Widget>
+            <Widget type="Button" skin="SecondaryButton" position_real="0.0954774 0.694511 0.0954774 0.0954654" name="XX0">
+                <Property key="Caption" value="&lt;"/>
+                <Property key="FontName" value="SM_Button"/>
+                <Property key="TextAlign" value="Center"/>
+            </Widget>
+            <Widget type="Button" skin="SecondaryButton" position_real="0.396985 0.694511 0.0954774 0.0954654" name="YY0">
+                <Property key="Caption" value="&lt;"/>
+                <Property key="FontName" value="SM_Button"/>
+                <Property key="TextAlign" value="Center"/>
+            </Widget>
+            <Widget type="Button" skin="SecondaryButton" position_real="0.69598 0.694511 0.0954774 0.0954654" name="ZZ0">
+                <Property key="Caption" value="&lt;"/>
+                <Property key="FontName" value="SM_Button"/>
+                <Property key="TextAlign" value="Center"/>
+            </Widget>
+        </Widget>
+    </Widget>
+    <CodeGeneratorSettings/>
+</MyGUI>

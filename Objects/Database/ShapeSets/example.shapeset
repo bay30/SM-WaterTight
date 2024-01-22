@@ -1,0 +1,52 @@
+{
+   "partList" : [
+      {
+         "box" : {
+            "x" : 1,
+            "y" : 1,
+            "z" : 1
+         },
+         "color" : "df7f01",
+         "flammable" : false,
+         "name" : "Sealer",
+         "physicsMaterial" : "Default",
+         "ratings" : {
+            "buoyancy" : 1,
+            "density" : 1,
+            "durability" : 1,
+            "friction" : 1
+         },
+         "renderable" : "$GAME_DATA/Objects/Renderable/Interactive/obj_interactive_logicgate.rend",
+         "rotationSet" : "Default",
+         "scripted" : {
+            "classname" : "Sealer",
+            "filename" : "$CONTENT_DATA/Scripts/Sealer.lua"
+         },
+         "uuid" : "f5926117-dd91-4909-8a3f-83ae595c1871"
+      },
+      {
+         "box" : {
+            "x" : 1,
+            "y" : 1,
+            "z" : 1
+         },
+         "color" : "FFFFFF",
+         "flammable" : false,
+         "name" : "Door",
+         "physicsMaterial" : "Default",
+         "ratings" : {
+            "buoyancy" : 1,
+            "density" : 1,
+            "durability" : 1,
+            "friction" : 1
+         },
+         "renderable" : "$GAME_DATA/Objects/Renderable/Interactive/obj_interactive_logicgate.rend",
+         "rotationSet" : "Default",
+         "scripted" : {
+            "classname" : "Door",
+            "filename" : "$CONTENT_DATA/Scripts/Door.lua"
+         },
+         "uuid" : "851d6511-f64e-4647-b6d1-b0850a7702a0"
+      }
+   ]
+}
