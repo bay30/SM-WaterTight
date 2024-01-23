@@ -13,6 +13,12 @@ local neighbours = {
     sm.vec3.new(0, 0, -1),
 }
 
+local minNeighbours = {
+    sm.vec3.new(1, 0, 0),
+    sm.vec3.new(0, 1, 0),
+    sm.vec3.new(0, 0, 1)
+}
+
 local function round(value)
     local decimal = value % 1
 
@@ -281,7 +287,6 @@ function Sealer:server_calucateVolumes()
             end
         end
     end
-
     -- Calucate what cells shapes are occupying --
     for _, shape in ipairs(body:getShapes()) do
         calucateBlockOverlap(shape)
@@ -298,7 +303,6 @@ function Sealer:server_calucateVolumes()
             end
         end
     end
-
     -- Sort grid cells into their cell ids --
     local sortedIds = {}
     for x = min.x, max.x do
@@ -322,20 +326,20 @@ function Sealer:server_calucateVolumes()
         for y = min.y, max.y do
             for z = min.z, max.z do
                 local mainCell = grid[x][y][z]
-                if mainCell ~= nil then
+                if mainCell ~= nil and mainCell <= iterationCount then
                     -- Check we if have neighbours and assign their cell id to ours so we know we are connected --
-                    for _, vec in ipairs(neighbours) do
+                    for _, vec in ipairs(minNeighbours) do
                         local cell = grid[x + vec.x] and grid[x + vec.x][y + vec.y] and
                             grid[x + vec.x][y + vec.y][z + vec.z]
-                        if cell and cell ~= mainCell and cell <= iterationCount and mainCell <= iterationCount then
+                        if cell and cell ~= mainCell and cell <= iterationCount then
                             -- Iterate over all cells with same id and assign new id --
                             for _, v in ipairs(sortedIds[cell]) do
                                 grid[v.x][v.y][v.z] = mainCell
-                                table.insert(sortedIds[mainCell], {
+                                sortedIds[mainCell][#sortedIds[mainCell] + 1] = {
                                     x = v.x,
                                     y = v.y,
                                     z = v.z,
-                                })
+                                }
                             end
                             sortedIds[cell] = nil
                         end
