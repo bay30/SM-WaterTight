@@ -5,6 +5,7 @@ Door.connectionInput = sm.interactable.connectionType.logic
 Door.connectionOutput = sm.interactable.connectionType.none
 Door.colorNormal = sm.color.new( 0xc41616ff )
 Door.colorHighlight = sm.color.new( 0xd91111ff )
+Door.poseWeightCount = 1
 
 function Door:server_onCreate()
 	self.Storage = self.storage:load() or {}
@@ -156,6 +157,10 @@ function Door:client_onCreate()
 	self.cl.Gui:setTextChangedCallback( "ZZ", "client_input" )
 	
 	self:client_refresheffect()
+end
+
+function Door:client_onUpdate()
+	self.interactable:setUvFrameIndex(self.interactable:isActive() and 6 or 0)
 end
 
 function Door:client_onDestroy()
