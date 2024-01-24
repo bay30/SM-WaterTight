@@ -128,26 +128,33 @@ function Sealer:server_onFixedUpdate()
 
         for i, v in ipairs(self.sv.volumes) do
             -- index 1 is exterior --
-            if i > 1 then
-                -- TODO fix the water volume calucation losing water pressure through volumes --
-
+            local interactable = findInteractable(self.shape.body:getInteractables(), v.interactable)
+            if i > 1 and (not interactable or interactable:isActive()) then
+                local validNeighbours = {}
                 for _, neighbourId in ipairs(v.neighbours) do
                     local neighbour = self.sv.volumes[neighbourId]
 
-                    local interactable = findInteractable(self.shape.body:getInteractables(), v.interactable)
-                    if not interactable or interactable:isActive() then
+                    local interactable = findInteractable(self.shape.body:getInteractables(), neighbour.interactable)
+                    if (not interactable or interactable:isActive()) then
+                        table.insert(validNeighbours, neighbourId)
+                    end
+                end
+
+                local neighbours = {}
+                for _, neighbourId in ipairs(validNeighbours) do
+                    table.insert(neighbours, neighbourId)
+                    local neighbour = self.sv.volumes[neighbourId]
+
                     local height = v.min.z + (v.max.z - v.min.z) * (v.water / v.volume)
                     local neighbourHeight = neighbour.min.z +
                         (neighbour.max.z - neighbour.min.z) * (neighbour.water / neighbour.volume)
 
-                    local diff = height - neighbourHeight
+                    local diff = (height - neighbourHeight) / #validNeighbours
 
-                    neighbour.water = neighbour.water + diff
-                    v.water = v.water - diff
-
-                    --neighbour.water = clamp(neighbour.water + diff, 0, neighbour.volume)
-                    --v.water = clamp(v.water - diff, 0, v.volume)
+                    if neighbourId ~= 1 then
+                        neighbour.water = neighbour.water + diff
                     end
+                    v.water = v.water - diff
                 end
 
                 -- Increase water level of all volumes --
@@ -303,6 +310,7 @@ function Sealer:server_calucateVolumes()
             end
         end
     end
+
     -- Sort grid cells into their cell ids --
     local sortedIds = {}
     for x = min.x, max.x do
@@ -428,7 +436,7 @@ function Sealer:server_calucateVolumes()
         end
 
         v.min = localMin
-        v.max = localMax
+        v.max = localMax + sm.vec3.one()
 
         if localMin.x < min.x and localMin.y < min.y and localMin.z < min.z and localMax.x > max.x and localMax.y > max.y and localMax.z > max.z then
             min = localMin
@@ -504,14 +512,14 @@ function Sealer:client_updateVolume(water)
         if volume.effect and i ~= 1 then
             local effect = volume.effect
 
-            local size = volume.size / 4 + sm.vec3.one() / 4
+            local size = volume.size / 4
             local pos = volume.position / 4
 
             local percentage = clamp(volume.water / volume.volume, 0, 1)
 
             pos = pos + sm.vec3.new(0, 0, -size.z / 2 + size.z * percentage)
 
-            pos = self.shape.body:transformPoint(pos + sm.vec3.new(.125, .125, .125))
+            pos = self.shape.body:transformPoint(pos)
 
             effect:setPosition(pos)
             effect:setRotation(self.shape.body.worldRotation)
