@@ -6,5 +6,13 @@
     "851d6511-f64e-4647-b6d1-b0850a7702a0": {
         "title": "Door",
         "description": "Seals a volume while being walkthrough used for creating doors takes a single logic input, when activated will allow water to pass through."
+    },
+    "b38c912f-be74-4d7f-8075-60683f635aa3": {
+        "title": "Fluid Input",
+        "description": "When activated will pump water out of a compartment, make sure to connect to an fluid output."
+    },
+    "23361897-2105-4b82-a042-48aa3bc1f3c1": {
+        "title": "Fluid Output",
+        "description": "Dumps water from a fluid input directly into its compartment."
     }
 }

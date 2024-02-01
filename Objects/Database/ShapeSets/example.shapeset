@@ -17,7 +17,7 @@
             "friction" : 1
          },
          "renderable" : "$GAME_DATA/Objects/Renderable/Interactive/obj_interactive_logicgate.rend",
-         "rotationSet" : "Default",
+         "rotationSet" : "PropYZ",
          "scripted" : {
             "classname" : "Sealer",
             "filename" : "$CONTENT_DATA/Scripts/Sealer.lua"
@@ -41,12 +41,60 @@
             "friction" : 1
          },
          "renderable" : "$GAME_DATA/Objects/Renderable/Interactive/obj_interactive_logicgate.rend",
-         "rotationSet" : "Default",
+         "rotationSet" : "PropYZ",
          "scripted" : {
             "classname" : "Door",
             "filename" : "$CONTENT_DATA/Scripts/Door.lua"
          },
          "uuid" : "851d6511-f64e-4647-b6d1-b0850a7702a0"
+      },
+      {
+         "box" : {
+            "x" : 1,
+            "y" : 1,
+            "z" : 1
+         },
+         "color" : "FF0000",
+         "flammable" : false,
+         "name" : "FluidInput",
+         "physicsMaterial" : "Default",
+         "ratings" : {
+            "buoyancy" : 1,
+            "density" : 1,
+            "durability" : 1,
+            "friction" : 1
+         },
+         "renderable" : "$GAME_DATA/Objects/Renderable/Interactive/obj_interactive_logicgate.rend",
+         "rotationSet" : "PropYZ",
+         "scripted" : {
+            "classname" : "FluidInput",
+            "filename" : "$CONTENT_DATA/Scripts/FluidInput.lua"
+         },
+         "uuid" : "b38c912f-be74-4d7f-8075-60683f635aa3"
+      },
+      {
+         "box" : {
+            "x" : 1,
+            "y" : 1,
+            "z" : 1
+         },
+         "color" : "00FF00",
+         "flammable" : false,
+         "name" : "FluidOutput",
+         "physicsMaterial" : "Default",
+         "ratings" : {
+            "buoyancy" : 1,
+            "density" : 1,
+            "durability" : 1,
+            "friction" : 1
+         },
+         "renderable" : "$GAME_DATA/Objects/Renderable/Interactive/obj_interactive_logicgate.rend",
+         "rotationSet" : "PropYZ",
+         "scripted" : {
+            "classname" : "FluidOutput",
+            "filename" : "$CONTENT_DATA/Scripts/FluidOutput.lua"
+         },
+         "uuid" : "23361897-2105-4b82-a042-48aa3bc1f3c1"
       }
    ]
 }

@@ -45,14 +45,14 @@ local function floor(vec3)
     )
 end
 
-local function find(a, b)
-    for i, v in pairs(a) do
-        if v == b then
-            return true
+local function find(a, b, c)
+    for i, v in ipairs(a) do
+        if c and (v[c] == b) or (v == b) then
+            return i
         end
     end
 
-    return false
+    return nil
 end
 
 local function clamp(value, min, max)
@@ -131,7 +131,7 @@ function Sealer:server_onFixedUpdate()
             local interactable = findInteractable(self.shape.body:getInteractables(), v.interactable)
             if i > 1 and (not interactable or interactable:isActive()) then
                 local validNeighbours = {}
-                for _, neighbourId in ipairs(v.neighbours) do
+                for _, neighbourId in pairs(v.neighbours) do
                     local neighbour = self.sv.volumes[neighbourId]
 
                     local interactable = findInteractable(self.shape.body:getInteractables(), neighbour.interactable)
@@ -142,7 +142,6 @@ function Sealer:server_onFixedUpdate()
 
                 local neighbours = {}
                 for _, neighbourId in ipairs(validNeighbours) do
-                    table.insert(neighbours, neighbourId)
                     local neighbour = self.sv.volumes[neighbourId]
 
                     local height = v.min.z + (v.max.z - v.min.z) * (v.water / v.volume)
@@ -156,19 +155,44 @@ function Sealer:server_onFixedUpdate()
                     end
                     v.water = v.water - diff
                 end
-
-                -- Increase water level of all volumes --
-                --v.water = math.min(v.volume, v.water + 0)
-
-                -- Make volumes containing water heavier (water weight is just a randomish number) --
-                sm.physics.applyImpulse(self.shape.body, sm.vec3.new(0, 0, v.water * -1), true)
             end
+        end
+
+        for _, volume in ipairs(self.sv.volumes) do
+            local waterOutputs = {}
+            for _, interactable in ipairs(volume.interactables) do
+                if sm.exists(interactable) and interactable.shape.uuid == sm.uuid.new("b38c912f-be74-4d7f-8075-60683f635aa3") and interactable:isActive() then
+                    for _, child in ipairs(interactable:getChildren(sm.interactable.connectionType.water)) do
+                        if sm.exists(child) and child.shape.uuid == sm.uuid.new("23361897-2105-4b82-a042-48aa3bc1f3c1") and interactable:isActive() then
+                            for _, othervolume in ipairs(self.sv.volumes) do
+                                if find(othervolume.interactables, child.id, "id") then
+                                    table.insert(waterOutputs, othervolume)
+                                    break
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+
+            for _, othervolume in ipairs(waterOutputs) do
+                local val = clamp(volume.water, 0, 1)
+
+                volume.water = volume.water - val
+                othervolume.water = othervolume.water + val
+            end
+        end
+
+        for i, v in ipairs(self.sv.volumes) do
+            -- Make volumes containing water heavier (water weight is just a randomish number) --
+            sm.physics.applyImpulse(self.shape.body, sm.vec3.new(0, 0, v.water * -1.75), true)
 
             -- Create array for replication --
             minimalNetworkVolume[i] = {
                 water = v.water
             }
         end
+
         -- Replicate water levels to client --
         self.network:sendToClients("client_updateVolume", minimalNetworkVolume)
 
@@ -372,6 +396,7 @@ function Sealer:server_calucateVolumes()
                         array[value] = {
                             grid = {},
                             neighbours = {},
+                            interactables = {},
                             volume = 0,
                             water = 0
                         }
@@ -397,8 +422,17 @@ function Sealer:server_calucateVolumes()
                         for _, vec in ipairs(neighbours) do
                             local cell = grid[x + vec.x] and grid[x + vec.x][y + vec.y] and
                                 grid[x + vec.x][y + vec.y][z + vec.z]
-                            if cell and cell ~= value and not find(array[value].neighbours, cell) then
-                                table.insert(array[value].neighbours, cell)
+                            if cell and cell ~= value then
+                                local key = find(array[value].neighbours, cell, "id")
+
+                                if key then
+                                    array[value].neighbours[key].surfaceArea = array[value].neighbours[key].surfaceArea + .25
+                                else
+                                    table.insert(array[value].neighbours, {
+                                        id = cell;
+                                        surfaceArea = 0.25;
+                                    })
+                                end
                             end
                         end
                     end
@@ -460,9 +494,26 @@ function Sealer:server_calucateVolumes()
 
     -- Convert cell ids into volume array ids --
     for _, volume in ipairs(self.sv.volumes) do
-        for index, id in ipairs(volume.neighbours) do
-            if ids[id] then
-                volume.neighbours[index] = ids[id]
+        local newNeighbours = {}
+        for index, info in ipairs(volume.neighbours) do
+            if ids[info.id] then
+                newNeighbours[index] = ids[info.id]
+            end
+        end
+        volume.neighbours = newNeighbours
+    end
+
+    -- Add inputs/outputs to volumes --
+    for _, v in ipairs(self.shape.body:getInteractables()) do
+        if v.shape.uuid == sm.uuid.new("b38c912f-be74-4d7f-8075-60683f635aa3") or v.shape.uuid == sm.uuid.new("23361897-2105-4b82-a042-48aa3bc1f3c1") then
+            for _, volume in ipairs(self.sv.volumes) do
+                local point = localDirection(self.shape.body, ((v.shape.worldPosition + v.shape.at/4) - self.shape.body.worldPosition) * 4)
+                local x, y, z = math.floor(point.x), math.floor(point.y), math.floor(point.z)
+
+                if volume.grid[x]and volume.grid[x][y] and volume.grid[x][y][z] then
+                    table.insert(volume.interactables, v)
+                    break
+                end
             end
         end
     end
