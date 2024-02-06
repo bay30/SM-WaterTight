@@ -271,14 +271,14 @@ function Sealer:server_calucateVolumes()
 
     -- Clear value of cells that contain blocks/parts --
     local function calucateBlockOverlap(shape, pos2, size2, value)
-        local pos, rot, size = shape.worldPosition, shape:getLocalRotation(), shape:getBoundingBox()
+        local pos, rot, size = shape.localPosition, shape:getLocalRotation(), shape:getBoundingBox()
         local front, side, up = sm.quat.getAt(rot), sm.quat.getRight(rot), sm.quat.getUp(rot)
 
-        -- Workaround due to localPosition being offset by localRotation --
-        pos = (pos - self.shape.body.worldPosition) * 4
-
-        -- Handle body rotation to keep the position local to body --
-        pos = localDirection(self.shape.body, pos)
+        -- Handle shape local rotation --
+        local bounding = shape:getBoundingBox()
+        pos = pos + shape.xAxis * bounding.x * 2
+        pos = pos + shape.yAxis * bounding.y * 2
+        pos = pos + shape.zAxis * bounding.z * 2
 
         -- Handle values from door interactable --
         if pos2 then
