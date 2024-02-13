@@ -184,8 +184,10 @@ function Sealer:server_onFixedUpdate()
         end
 
         for i, v in ipairs(self.sv.volumes) do
-            -- Make volumes containing water heavier (water weight is just a randomish number) --
-            sm.physics.applyImpulse(self.shape.body, sm.vec3.new(0, 0, v.water * -1.75), true)
+            if i > 1 then
+                -- Make volumes containing water heavier (water weight is just a randomish number) --
+                sm.physics.applyImpulse(self.shape.body, sm.vec3.new(0, 0, v.water * -1.75), true)
+            end
 
             -- Create array for replication --
             minimalNetworkVolume[i] = {
