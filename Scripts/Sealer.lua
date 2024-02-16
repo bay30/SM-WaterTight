@@ -199,13 +199,14 @@ function Sealer:server_onFixedUpdate()
         self.network:sendToClients("client_updateVolume", minimalNetworkVolume)
 
         -- Handle player characters when they are inside volumes --
+        local inverted = sm.quat.inverse(self.shape.body.worldRotation)
+        local front, side, up = sm.quat.getAt(inverted), sm.quat.getRight(inverted), sm.quat.getUp(inverted)
+
         local newCharacterStates = {}
         for _, player in ipairs(sm.player.getAllPlayers()) do
             local character = player:getCharacter()
             if character and sm.exists(character) then
                 local localPoint = character.worldPosition - self.shape.body.worldPosition
-                local inverted = sm.quat.inverse(self.shape.body.worldRotation)
-                local front, side, up = sm.quat.getAt(inverted), sm.quat.getRight(inverted), sm.quat.getUp(inverted)
                 local point = (front * localPoint.z) + (side * localPoint.x) + (up * localPoint.y)
 
                 -- Convert localPoint to grid position --
@@ -227,9 +228,9 @@ function Sealer:server_onFixedUpdate()
 
                 if volume then
                     -- Check if character is at suitable height to be swimming --
-                    local height = volume.min.z + (volume.max.z - volume.min.z) * (volume.water / volume.volume)
+                    local height = self.shape.body:transformPoint(sm.vec3.lerp(volume.min, volume.max, 0.5)/4).z + (volume.max.z - volume.min.z) * ((volume.water / volume.volume) - .5)/4
 
-                    local characterInWater = localPoint.z < height/4
+                    local characterInWater = character.worldPosition.z < height
 
                     -- Make the character swim/dive --
                     character:setSwimming(characterInWater)
