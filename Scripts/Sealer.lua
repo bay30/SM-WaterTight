@@ -186,7 +186,11 @@ function Sealer:server_onFixedUpdate()
         for i, v in ipairs(self.sv.volumes) do
             if i > 1 then
                 -- Make volumes containing water heavier (water weight is just a randomish number) --
-                sm.physics.applyImpulse(self.shape.body, sm.vec3.new(0, 0, v.water * -1.75), true)
+                local bodyMin, bodyMax = self.shape.body:getLocalAabb()
+                local bodyCenter = sm.vec3.lerp(bodyMin, bodyMax, 0.5)/4
+                local volumeCenter = sm.vec3.lerp(v.min, v.max, 0.5)/4
+                local worldOffset = self.shape.body:transformPoint(volumeCenter - bodyCenter) - self.shape.body.worldPosition
+                sm.physics.applyImpulse(self.shape.body, sm.vec3.new(0, 0, v.water * -1.75), true, worldOffset)
             end
 
             -- Create array for replication --
@@ -575,8 +579,16 @@ function Sealer:client_updateVolume(water)
 
             pos = self.shape.body:transformPoint(pos)
 
+            -- Respect the volume bounds with rotation considered --
+            size = sm.vec3.new(size.x, size.y, 0)
+
+            local min = self.shape.body:transformPoint(pos - size/2) - self.shape.body.worldPosition
+            local max = self.shape.body:transformPoint(pos + size/2) - self.shape.body.worldPosition
+
+            size = max-min
+            size = sm.vec3.new(size.x, size.y, 1)
+
             effect:setPosition(pos)
-            effect:setRotation(self.shape.body.worldRotation)
             -- Dividing by 2048 because of effect size --
             effect:setScale(size / 2048)
 
