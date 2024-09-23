@@ -1,3 +1,5 @@
+dofile( "$SURVIVAL_DATA/Scripts/game/survival_projectiles.lua" )
+
 Sealer = class()
 Sealer.maxParentCount = 1
 Sealer.maxChildCount = 0
@@ -95,7 +97,7 @@ function Sealer:server_onRefresh()
     self:server_calucateVolumes()
 end
 
-function Sealer:server_onFixedUpdate()
+function Sealer:server_onFixedUpdate(delta) -- Physics does not currently throttle so delta is just the tick rate (40 ticks per second, 0.025)
     -- Originally for only getting the areatrigger overlapping body but wouldn't detect areaTrigger it was inside --
     --local bodyMin, bodyMax = self.shape.body:getWorldAabb()
     --local bodySize = bodyMax-bodyMin
@@ -125,13 +127,16 @@ function Sealer:server_onFixedUpdate()
     if #self.sv.volumes > 0 then
         -- Update water level of volumes and replicate to client --
         local minimalNetworkVolume = {}
+        local exteriorVolumeId = self.sv.volumes[1].id
 
         for i, v in ipairs(self.sv.volumes) do
             -- index 1 is exterior --
             local interactable = findInteractable(self.shape.body:getInteractables(), v.interactable)
-            if i > 1 and (not interactable or interactable:isActive()) then
+            if (not interactable or interactable:isActive())  then
+            --if i > 1 and (not interactable or interactable:isActive()) then
                 local validNeighbours = {}
-                for _, neighbourId in pairs(v.neighbours) do
+                for _, neighbourInfo in pairs(v.neighbours) do
+                    local neighbourId = neighbourInfo.id
                     local neighbour = self.sv.volumes[neighbourId]
 
                     local interactable = findInteractable(self.shape.body:getInteractables(), neighbour.interactable)
@@ -141,6 +146,7 @@ function Sealer:server_onFixedUpdate()
                 end
 
                 local neighbours = {}
+                local waterDebt = {}
                 for _, neighbourId in ipairs(validNeighbours) do
                     local neighbour = self.sv.volumes[neighbourId]
 
@@ -148,12 +154,51 @@ function Sealer:server_onFixedUpdate()
                     local neighbourHeight = neighbour.min.z +
                         (neighbour.max.z - neighbour.min.z) * (neighbour.water / neighbour.volume)
 
-                    local diff = (height - neighbourHeight) / #validNeighbours
+                    local diff = (height - neighbourHeight) --/ #validNeighbours
 
-                    if neighbourId ~= 1 then
-                        neighbour.water = neighbour.water + diff
+                    table.insert(waterDebt, {
+                        neighbour = neighbourId;
+                        difference = diff;
+                    })
+                end
+
+                local waterDebtLength = #waterDebt -- Getting array length can be slow so just cache it.
+                for _, waterInfo in ipairs(waterDebt) do
+                    local neighbour = self.sv.volumes[waterInfo.neighbour]
+
+                    local index = find(self.sv.volumes[i].neighbours, waterInfo.neighbour, "id")
+                    local surfaceArea = self.sv.volumes[i].neighbours[index].surfaceArea
+
+                    local difference = clamp(waterInfo.difference / waterDebtLength * surfaceArea, 0, surfaceArea) * delta * 8
+
+                    if v.water - difference < 0 then
+                        difference = v.water
                     end
-                    v.water = v.water - diff
+
+                    if waterInfo.neighbour ~= 1 then
+                        neighbour.water = neighbour.water + difference
+                    end
+                    if i ~= 1 then
+                        v.water = v.water - difference
+                    end
+
+                    if neighbour.id == exteriorVolumeId then
+                        if v.exportedWater == nil then
+                            v.exportedWater = 0
+                        end
+
+                        v.exportedWater = v.exportedWater + difference
+                        if v.exportedWater > 4 then
+                            local iterationLimit = 5
+                            repeat
+                                v.exportedWater = v.exportedWater - 4
+
+                                sm.projectile.shapeFire( interactable:getShape(), projectile_water, interactable.publicData.pos/4 + sm.vec3.new(interactable.publicData.size.x, 0, interactable.publicData.size.z)/4, sm.noise.gunSpread( sm.vec3.new( 0.0, 1.0, 0.0 ), 10 ) * 6 )
+
+                                iterationLimit = iterationLimit - 1
+                            until v.exportedWater < 4 or iterationLimit < 1
+                        end
+                    end
                 end
             end
         end
@@ -166,7 +211,11 @@ function Sealer:server_onFixedUpdate()
                         if sm.exists(child) and child.shape.uuid == sm.uuid.new("23361897-2105-4b82-a042-48aa3bc1f3c1") and interactable:isActive() then
                             for _, othervolume in ipairs(self.sv.volumes) do
                                 if find(othervolume.interactables, child.id, "id") then
-                                    table.insert(waterOutputs, othervolume)
+                                    table.insert(waterOutputs, {
+                                        inputInteractable = interactable;
+                                        outputInteractable = child;
+                                        volume = othervolume;
+                                    })
                                     break
                                 end
                             end
@@ -175,11 +224,42 @@ function Sealer:server_onFixedUpdate()
                 end
             end
 
-            for _, othervolume in ipairs(waterOutputs) do
-                local val = clamp(volume.water, 0, 1)
+            for _, pipeInfo in ipairs(waterOutputs) do
+                local difference = clamp(volume.water, 0, .4) -- Want good flow but not insanely fast.
 
-                volume.water = volume.water - val
-                othervolume.water = othervolume.water + val
+                if volume.water - difference < 0 then
+                    difference = volume.water
+                end
+                if pipeInfo.volume.water + difference < 0 then
+                    difference = -pipeInfo.volume.water
+                end
+
+                if volume.id ~= exteriorVolumeId then
+                    volume.water = volume.water - difference
+                end
+                if pipeInfo.volume.id ~= exteriorVolumeId then
+                    pipeInfo.volume.water = pipeInfo.volume.water + difference
+                end
+                
+                local publicData = pipeInfo.outputInteractable:getPublicData()
+                if publicData == nil then
+                    publicData = {}
+                end
+
+                if publicData.water == nil then
+                    publicData.water = 0
+                end
+
+                publicData.water = publicData.water + difference
+                if publicData.water > 4 then
+                    if pipeInfo.volume.id == exteriorVolumeId then
+                        sm.projectile.shapeFire( pipeInfo.outputInteractable:getShape(), projectile_water, sm.vec3.new( 0.0, 0.375, 0.0 ), sm.noise.gunSpread( sm.vec3.new( 0.0, 1.0, 0.0 ), 3 ) * 8 )
+                    end
+
+                    publicData.water = 0
+                end
+
+                pipeInfo.outputInteractable:setPublicData(publicData)
             end
         end
 
@@ -234,7 +314,8 @@ function Sealer:server_onFixedUpdate()
                     -- Check if character is at suitable height to be swimming --
                     local height = self.shape.body:transformPoint(sm.vec3.lerp(volume.min, volume.max, 0.5)/4).z + (volume.max.z - volume.min.z) * ((volume.water / volume.volume) - .5)/4
 
-                    local characterInWater = character.worldPosition.z < height
+                    local characterFloatOffset = 0.2 + ( character:isCrouching() and 0.4 or 0.0 ) -- Math taken from the WaterManager.lua
+                    local characterInWater = character.worldPosition.z + characterFloatOffset < height
 
                     -- Make the character swim/dive --
                     character:setSwimming(characterInWater)
@@ -504,10 +585,11 @@ function Sealer:server_calucateVolumes()
         local newNeighbours = {}
         for index, info in ipairs(volume.neighbours) do
             if ids[info.id] then
-                newNeighbours[index] = ids[info.id]
+                volume.neighbours[index].id = ids[info.id]
+                --newNeighbours[index] = ids[info.id]
             end
         end
-        volume.neighbours = newNeighbours
+        --volume.neighbours = newNeighbours
     end
 
     -- Add inputs/outputs to volumes --
@@ -542,6 +624,7 @@ end
 function Sealer:client_onCreate()
     self.cl = {}
     self.cl.effects = {}
+    self.cl.effectStates = {}
 end
 
 function Sealer:client_onDestroy()
@@ -575,7 +658,7 @@ function Sealer:client_updateVolume(water)
 
             local percentage = clamp(volume.water / volume.volume, 0, 1)
 
-            pos = pos + sm.vec3.new(0, 0, -size.z / 2 + size.z * percentage)
+            pos = pos + sm.vec3.new(0, 0, -size.z / 2 + size.z * percentage - 0.001) -- 0.001 z is to prevent z fighting when water level is 0.
 
             pos = self.shape.body:transformPoint(pos)
 
@@ -592,6 +675,16 @@ function Sealer:client_updateVolume(water)
             -- Dividing by 2048 because of effect size --
             effect:setScale(size / 2048)
 
+            -- Stop rendering the effect if there isn't enough water in the volume. --
+            local state = volume.water > 0.001
+            if self.cl.effectStates[i] ~= state then
+                self.cl.effectStates[i] = state
+                if state then
+                    effect:start()
+                else
+                    effect:stop()
+                end
+            end
         end
     end
 end
@@ -601,6 +694,7 @@ function Sealer:client_visualize(volumes)
         v:stop()
     end
     self.cl.effects = {}
+    self.cl.effectStates = {}
 
     self.cl.volumes = volumes
     for i, volume in pairs(volumes) do
@@ -609,7 +703,7 @@ function Sealer:client_visualize(volumes)
         --effect:setRotation(self.shape.body.worldRotation)
 
         effect:setScale(sm.vec3.one()/2048)
-        effect:start()
+        --effect:start()
 
         volume.effect = effect
         table.insert(self.cl.effects, effect)
