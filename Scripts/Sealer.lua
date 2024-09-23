@@ -1,5 +1,7 @@
 dofile( "$SURVIVAL_DATA/Scripts/game/survival_projectiles.lua" )
 
+local VOLUME_DEBUG = false
+
 Sealer = class()
 Sealer.maxParentCount = 1
 Sealer.maxChildCount = 0
@@ -342,7 +344,7 @@ function Sealer:server_calucateVolumes()
     -- Define grid bounds with a block border for the exterior --
     local min, max = body:getLocalAabb()
     min = min - sm.vec3.one()
-    max = max + sm.vec3.one()
+    --max = max + sm.vec3.one()
 
     -- Define grid and grid cell ids --
     local iterationCount = 0
@@ -614,7 +616,8 @@ function Sealer:server_calucateVolumes()
             position = sm.vec3.lerp(volume.min, volume.max, 0.5),
             size = volume.max-volume.min,
             volume = volume.volume,
-            water = 0
+            water = 0,
+            grid = VOLUME_DEBUG and volume.grid or nil
         }
     end
 
@@ -650,7 +653,7 @@ function Sealer:client_updateVolume(water)
 
     -- Render water level with effect --
     for i, volume in ipairs(self.cl.volumes or {}) do
-        if volume.effect and i ~= 1 then
+        if volume.effect and (i ~= 1 and not VOLUME_DEBUG) then
             local effect = volume.effect
 
             local size = volume.size / 4
@@ -710,7 +713,7 @@ function Sealer:client_visualize(volumes)
     end
 
     -- Debugging tools to visualize volumes --
-    --[[
+    if VOLUME_DEBUG then
     local colors = {
         sm.color.new(255, 0, 0),
         sm.color.new(0, 255, 0),
@@ -740,5 +743,5 @@ function Sealer:client_visualize(volumes)
             end
         end
     end
-    ]]
+end
 end
