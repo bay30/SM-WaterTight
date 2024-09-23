@@ -1,6 +1,8 @@
 dofile( "$SURVIVAL_DATA/Scripts/game/survival_projectiles.lua" )
 
-local VOLUME_DEBUG = false
+local VOLUME_DEBUG = false -- Shows grid with each volume having a different color.
+local WATER_VALUE = 2 -- How much vanilla water projectiles are worth.
+local WATER_WEIGHT = 2
 
 Sealer = class()
 Sealer.maxParentCount = 1
@@ -211,12 +213,15 @@ function Sealer:server_onFixedUpdate(delta) -- Physics does not currently thrott
                         end
 
                         v.exportedWater = v.exportedWater + difference
-                        if v.exportedWater > 4 then
+                        if v.exportedWater > WATER_VALUE then
                             local iterationLimit = 5
                             repeat
-                                v.exportedWater = v.exportedWater - 4
+                                v.exportedWater = v.exportedWater - WATER_VALUE
 
-                                sm.projectile.shapeFire( interactable:getShape(), projectile_water, interactable.publicData.pos/4 + sm.vec3.new(interactable.publicData.size.x, 0, interactable.publicData.size.z)/4, sm.noise.gunSpread( sm.vec3.new( 0.0, 1.0, 0.0 ), 10 ) * 6 )
+                                local pos = interactable.publicData.pos/4
+                                local posNoise = sm.vec3.new(interactable.publicData.size.x * (math.random() - .5), 0, interactable.publicData.size.z * (math.random() - .5))/4
+
+                                sm.projectile.shapeFire( interactable:getShape(), projectile_water, pos + posNoise, sm.noise.gunSpread( sm.vec3.new( 0.0, 1.0, 0.0 ), 10 ) * 6 )
 
                                 iterationLimit = iterationLimit - 1
                             until v.exportedWater < 4 or iterationLimit < 1
@@ -274,12 +279,12 @@ function Sealer:server_onFixedUpdate(delta) -- Physics does not currently thrott
                 end
 
                 publicData.water = publicData.water + difference
-                if publicData.water > 4 then
+                if publicData.water > WATER_VALUE then
                     if pipeInfo.volume.id == exteriorVolumeId then
                         sm.projectile.shapeFire( pipeInfo.outputInteractable:getShape(), projectile_water, sm.vec3.new( 0.0, 0.375, 0.0 ), sm.noise.gunSpread( sm.vec3.new( 0.0, 1.0, 0.0 ), 3 ) * 8 )
                     end
 
-                    publicData.water = 0
+                    publicData.water = publicData.water - WATER_VALUE
                 end
 
                 pipeInfo.outputInteractable:setPublicData(publicData)
@@ -293,7 +298,7 @@ function Sealer:server_onFixedUpdate(delta) -- Physics does not currently thrott
                 local bodyCenter = sm.vec3.lerp(bodyMin, bodyMax, 0.5)/4
                 local volumeCenter = sm.vec3.lerp(v.min, v.max, 0.5)/4
                 local worldOffset = self.shape.body:transformPoint(volumeCenter - bodyCenter) - self.shape.body.worldPosition
-                sm.physics.applyImpulse(self.shape.body, sm.vec3.new(0, 0, v.water * -1.75), true, worldOffset)
+                sm.physics.applyImpulse(self.shape.body, sm.vec3.new(0, 0, v.water * -WATER_WEIGHT), true, worldOffset)
             end
 
             -- Create array for replication --
