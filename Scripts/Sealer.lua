@@ -134,6 +134,27 @@ function Sealer:server_onFixedUpdate(delta) -- Physics does not currently thrott
         for i, v in ipairs(self.sv.volumes) do
             -- index 1 is exterior --
             local interactable = findInteractable(self.shape.body:getInteractables(), v.interactable)
+
+            -- Force water out of seal when it is closed. --
+            if (interactable and not interactable:isActive() and v.water > 0) then
+                local validNeighbours = {}
+                for _, neighbourInfo in pairs(v.neighbours) do
+                    local neighbourId = neighbourInfo.id
+                    local neighbour = self.sv.volumes[neighbourId]
+
+                    local interactable = findInteractable(self.shape.body:getInteractables(), neighbour.interactable)
+                    if (not interactable or interactable:isActive()) then
+                        table.insert(validNeighbours, neighbourId)
+                    end
+                end
+
+                for _, neighbourId in ipairs(validNeighbours) do
+                    local neighbour = self.sv.volumes[neighbourId]
+                    neighbour.water = neighbour.water + v.water / #validNeighbours
+                end
+                v.water = 0
+            end
+
             if (not interactable or interactable:isActive())  then
             --if i > 1 and (not interactable or interactable:isActive()) then
                 local validNeighbours = {}
@@ -679,7 +700,7 @@ function Sealer:client_updateVolume(water)
             effect:setScale(size / 2048)
 
             -- Stop rendering the effect if there isn't enough water in the volume. --
-            local state = volume.water > 0.001
+            local state = volume.water > 0.001 and percentage < 0.999
             if self.cl.effectStates[i] ~= state then
                 self.cl.effectStates[i] = state
                 if state then
