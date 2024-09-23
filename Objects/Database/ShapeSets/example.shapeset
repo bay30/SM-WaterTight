@@ -41,7 +41,7 @@
             "friction" : 1
          },
          "renderable" : "$GAME_DATA/Objects/Renderable/Interactive/obj_interactive_logicgate.rend",
-         "rotationSet" : "PropYZ",
+         "rotationSet" : "PropX",
          "scripted" : {
             "classname" : "Door",
             "filename" : "$CONTENT_DATA/Scripts/Door.lua"

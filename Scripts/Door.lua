@@ -7,12 +7,94 @@ Door.colorNormal = sm.color.new( 0xc41616ff )
 Door.colorHighlight = sm.color.new( 0xd91111ff )
 Door.poseWeightCount = 1
 
+local function round(value)
+    local decimal = value % 1
+
+    if decimal < .5 then
+        return value - decimal
+    else
+        return value + (1 - decimal)
+    end
+end
+
+local function roundVec(vec3)
+    return sm.vec3.new(
+        round(vec3.x),
+        round(vec3.y),
+        round(vec3.z)
+    )
+end
+
+local function directionLocalToWorld(shape, dir)
+	return shape:transformLocalPoint(dir) - shape.worldPosition
+end
+
 function Door:server_onCreate()
 	self.Storage = self.storage:load() or {}
 	self.Pos = self.Storage[1] or sm.vec3.new(0,0,0)
 	self.Size = self.Storage[2] or sm.vec3.new(1,1,1)
 	self.lastModification = 0
-    self.interactable.publicData = {
+
+	local position = self.shape:transformLocalPoint(sm.vec3.new( 0.0, 0.25, 0.0 ))
+	local direction = directionLocalToWorld(self.shape, sm.vec3.new( 0.0, 0.0, 1.0 ))
+	local upVector = directionLocalToWorld(self.shape, sm.vec3.new( 0.0, -1.0, 0.0 ))
+
+	-- Check if storage is blank --
+	if #self.Storage == 0 then
+		-- Try to automatically get one axis for volume. --
+		local point1, point2, point3
+
+		local success, result = sm.physics.raycast(position, position + direction * 5)
+		if success then
+			if result.type == "body" then
+				local body = result:getBody()
+				if sm.exists(body) and body.id == self.shape:getBody().id then
+					point1 = result.pointWorld
+				end
+			end
+		end
+
+		local success, result = sm.physics.raycast(position, position + direction * -5)
+		if success then
+			if result.type == "body" then
+				local body = result:getBody()
+				if sm.exists(body) and body.id == self.shape:getBody().id then
+					point2 = result.pointWorld
+				end
+			end
+		end
+
+		local success, result = sm.physics.raycast(position, position + upVector * -5)
+		if success then
+			if result.type == "body" then
+				local body = result:getBody()
+				if sm.exists(body) and body.id == self.shape:getBody().id then
+					point3 = result.pointWorld
+				end
+			end
+		end
+
+		if point1 and point2 then
+			point1 = self.shape:transformPoint(point1)
+			point2 = self.shape:transformPoint(point2)
+			point3 = self.shape:transformPoint(point3)
+
+			local center = sm.vec3.lerp(point1, point2, 0.5)
+
+			local rawNum = (point2 - point1).z --(self.shape.worldPosition - result.pointWorld).x
+			local yAxis = round(point3.y * 8)/2 - .5
+			local zAxis = round(rawNum * 8)/2
+
+			self.Size = sm.vec3.new(self.Size.x, yAxis, zAxis)
+			self.Pos = sm.vec3.new(self.Pos.x, yAxis/2 + .5, round(center.z * 8) / 2)
+			print(yAxis, zAxis)
+		end
+
+		self.storage:save( {self.Pos,self.Size} )
+		self.network:sendToClients("client_refresheffect")
+	end
+
+	self.interactable.publicData = {
         pos = self.Pos;
         size = self.Size;
     }
