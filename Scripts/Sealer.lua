@@ -92,7 +92,7 @@ function Sealer:server_onCreate()
     self.sv.volumes = {}
     self.sv.characterStates = {}
 
-    self:server_calucateVolumes()
+    self.sv.initTick = sm.game.getCurrentTick()
 end
 
 function Sealer:server_onRefresh()
@@ -102,6 +102,10 @@ function Sealer:server_onRefresh()
 end
 
 function Sealer:server_onFixedUpdate(delta) -- Physics does not currently throttle so delta is just the tick rate (40 ticks per second, 0.025)
+    if sm.game.getCurrentTick() == self.sv.initTick + 1 then
+        self:server_calucateVolumes()
+    end
+
     -- Originally for only getting the areatrigger overlapping body but wouldn't detect areaTrigger it was inside --
     --local bodyMin, bodyMax = self.shape.body:getWorldAabb()
     --local bodySize = bodyMax-bodyMin
