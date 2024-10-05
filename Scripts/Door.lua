@@ -81,7 +81,7 @@ function Door:server_onCreate()
 
 			local center = sm.vec3.lerp(point1, point2, 0.5)
 
-			local rawNum = (point2 - point1).z --(self.shape.worldPosition - result.pointWorld).x
+			local rawNum = (point1 - point2).z --(self.shape.worldPosition - result.pointWorld).x
 			local yAxis = round(point3.y * 8)/2 - .5
 			local zAxis = round(rawNum * 8)/2
 
