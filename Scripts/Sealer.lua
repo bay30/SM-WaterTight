@@ -114,7 +114,7 @@ function Sealer:server_onFixedUpdate(delta) -- Physics does not currently thrott
     if volume and volume.min and volume.max then
         local a, b = sm.physics.raycast(self.shape.body.worldPosition + sm.vec3.new(0, 0, 1000),
             self.shape.body.worldPosition, nil, sm.physics.filter.areaTrigger)
-        if a and b:getAreaTrigger():getUserData().water then
+        if a and b:getAreaTrigger() and type(b:getAreaTrigger():getUserData()) == "table" and b:getAreaTrigger():getUserData().water then
             local waterHeight = b:getAreaTrigger():getWorldMax().z
             local heightDifference = waterHeight - self.shape.body.worldPosition.z
             local height = volume.max.z - volume.min.z
